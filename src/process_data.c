@@ -43,7 +43,7 @@ void Process_Data(void) {
     }
 
     iChannel0LeftOut = iChannel0RightIn;
-    iChannel0RightOut = output_current[i];
+    iChannel0RightOut = (output_current[i] << 8);
 
     input_next[i] = rbits((iChannel0RightIn >> 8));
     i++;
