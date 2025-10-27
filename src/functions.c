@@ -85,37 +85,55 @@ void resample_spline(const fract* input_buffer,
         return;
     }
 
-    int64_t numerator_64 = (int64_t) N_in << ACC_SCALE;
-    int32_t ratio = (int32_t) (numerator_64 / (int64_t) N_out);
+    // --- 1. Calculate the resampling ratio ---
+    // Use double-precision for the ratio to avoid drift.
+    // We map (N_in - 1) samples to (N_out - 1) samples.
+    // This ensures the last output sample maps to the last input sample.
+    double ratio = 0.0;
+    if(N_out > 1) {
+        ratio = (double) (N_in - 1) / (double) (N_out - 1);
+    }
 
-    // Accumulator (Q16.15 format)
-    int32_t source_index = 0;
+    // Accumulator for the current position in the source buffer.
+    // Use 'double' for high precision to prevent rounding errors.
+    double source_pos = 0.0;
 
     const size_t max_index = N_in - 1;
 
     for(size_t n = 0; n < N_out; ++n) {
-        // Integer part
-        size_t i = (size_t) (source_index >> ACC_SCALE);
+        // --- 2. Get integer and fractional parts ---
+        // Integer part (the index of the sample *before* our position)
+        size_t i = (size_t) source_pos;
 
-        // Fractional part
-        fract x = (fract) (source_index & FRACT_Q_MASK);
+        // Fractional part (how far we are between sample 'i' and 'i+1')
+        fract x = (fract) (source_pos - (double) i);
 
-        // Advance the accumulator for the next output sample
-        source_index += ratio;
-
+        // --- 3. Handle boundary (end of buffer) ---
+        // If we are at or past the last valid index, we can't interpolate.
+        // Just clamp to the last sample.
         if(i >= max_index) {
-            output_buffer[n] = input_buffer[N_in - 1];
+            output_buffer[n] = input_buffer[max_index];
+            source_pos += ratio;    // Still advance the position
             continue;
         }
 
+        // --- 4. Get the 4 points for interpolation ---
+        // We are interpolating between y1 (at index i) and y2 (at index i+1)
         fract y1 = input_buffer[i];
         fract y2 = input_buffer[i + 1];
 
-        fract y0 = (i > 0) ? input_buffer[i - 1] : input_buffer[0];
+        // Handle boundary (start of buffer)
+        // If i=0, we have no y0, so just "repeat" y1
+        fract y0 = (i > 0) ? input_buffer[i - 1] : y1;
 
-        fract y3 =
-            (i + 2 < N_in) ? input_buffer[i + 2] : input_buffer[N_in - 1];
+        // Handle boundary (end of buffer)
+        // If i+2 is out of bounds, "repeat" y2
+        fract y3 = (i + 2 < N_in) ? input_buffer[i + 2] : y2;
 
-        output_buffer[n] = cubic_interp_fixed(y0, y1, y2, y3, x);
+        // --- 5. Interpolate and store the result ---
+        output_buffer[n] = cubic_interp(y0, y1, y2, y3, x);
+
+        // Advance the accumulator for the next output sample
+        source_pos += ratio;
     }
 }
