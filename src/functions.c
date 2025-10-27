@@ -40,40 +40,15 @@ void apply_fade(fract* arr1, const fract* arr2, size_t fade_length) {
     }
 }
 
-fract cubic_interp_fixed(fract y0, fract y1, fract y2, fract y3, fract x) {
-    int32_t x_32 = (int32_t) x;
-    int32_t y0_32 = (int32_t) y0;
-    int32_t y1_32 = (int32_t) y1;
-    int32_t y2_32 = (int32_t) y2;
-    int32_t y3_32 = (int32_t) y3;
+fract cubic_interp(fract y0, fract y1, fract y2, fract y3, fract x) {
+    // Standard Catmull-Rom Spline (alpha = 0.5)
+    fract c0 = y1;
+    fract c1 = 0.5f * (y2 - y0);
+    fract c2 = y0 - 2.5f * y1 + 2.0f * y2 - 0.5f * y3;
+    fract c3 = -0.5f * y0 + 1.5f * y1 - 1.5f * y2 + 0.5f * y3;
 
-    // x^2, x^3
-    int32_t x2_32 = (int32_t) (((int64_t) x_32 * (int64_t) x_32) >> ACC_SCALE);
-    int32_t x3_32 = (int32_t) (((int64_t) x_32 * (int64_t) x2_32) >> ACC_SCALE);
-
-    int32_t a_32 = y3_32 - y2_32 - y0_32 + y1_32;
-    int32_t b_32 = y0_32 - y1_32 - a_32;
-    int32_t c_32 = y2_32 - y0_32;
-    int32_t d_32 = y1_32;
-
-    // Calculate terms (term = coefficient * power)
-    int32_t term_a =
-        (int32_t) (((int64_t) a_32 * (int64_t) x3_32) >> ACC_SCALE);
-    int32_t term_b =
-        (int32_t) (((int64_t) b_32 * (int64_t) x2_32) >> ACC_SCALE);
-    int32_t term_c = (int32_t) (((int64_t) c_32 * (int64_t) x_32) >> ACC_SCALE);
-
-    // Sum the terms using 32-bit addition
-    int32_t result_32 = term_a + term_b + term_c + d_32;
-
-    if(result_32 > FRACT_MAX) {
-        return FRACT_MAX;
-    }
-    if(result_32 < FRACT_MIN) {
-        return FRACT_MIN;
-    }
-
-    return (fract) result_32;
+    // Evaluate the polynomial: ((c3*x + c2)*x + c1)*x + c0
+    return ((c3 * x + c2) * x + c1) * x + c0;
 }
 
 void resample_spline(const fract* input_buffer,
