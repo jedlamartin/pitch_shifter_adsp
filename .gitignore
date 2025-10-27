@@ -5,3 +5,4 @@ system.svc
 .settings/*
 Debug/*
 src/.vscode/*
+.vscode/*

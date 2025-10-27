@@ -21,13 +21,22 @@ size_t corr(const fract* arr1, const fract* arr2) {
     return max_index;
 }
 
-void apply_fade(fract* arr1, fract* arr2, size_t fade_length) {
-    fract dx = (fract) (FRACT_MAX / fade_length);
-    int32_t mul_acc = 0;
+void apply_fade(fract* arr1, const fract* arr2, size_t fade_length) {
+    if(fade_length == 0) return;
+    int32_t dx_32 = (int32_t) FRACT_MAX / (int32_t) fade_length;
+    int32_t fade_in_acc_32 = 0;
     for(size_t i = 0; i < fade_length; ++i) {
-        fract mul = (fract) (mul_acc >> ACC_SCALE);
-        arr1[block_length - 1 - fade_length + i] *= mul;
-        arr2[i] *= mul;
+        int32_t v1 = (int32_t) (((int64_t) arr1[i] *
+                                 (int64_t) (FRACT_MAX - fade_in_acc_32)) >>
+                                ACC_SCALE);
+        int32_t v2 =
+            (int32_t) (((int64_t) arr2[i] * (int64_t) fade_in_acc_32) >>
+                       ACC_SCALE);
+        int32_t res = v1 + v2;
+        res =
+            (res > FRACT_MAX) ? FRACT_MAX : (res < FRACT_MIN ? FRACT_MIN : res);
+        arr1[i] = (fract) res;
+        fade_in_acc_32 += dx_32;
     }
 }
 
@@ -76,10 +85,8 @@ void resample_spline(const fract* input_buffer,
         return;
     }
 
-    float ratio_fp = (float) N_in / (float) N_out;
-
-    // Ratio (Q16.15)
-    int32_t ratio = (int32_t) (ratio_fp * (1.0f * (1 << ACC_SCALE)));
+    int64_t numerator_64 = (int64_t) N_in << ACC_SCALE;
+    int32_t ratio = (int32_t) (numerator_64 / (int64_t) N_out);
 
     // Accumulator (Q16.15 format)
     int32_t source_index = 0;
