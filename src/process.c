@@ -61,5 +61,5 @@ void process() {
     out_tmp_index += block_length - fade_length;
 
     // Interpolate
-    resample_spline(out_tmp, out_tmp_index, output_current, N);
+    resample_spline(out_tmp, out_tmp_index, out_current, N);
 }
