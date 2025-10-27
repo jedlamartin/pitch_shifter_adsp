@@ -43,12 +43,17 @@ void Process_Data(void) {
     }
 
     iChannel0LeftOut = iChannel0RightIn;
-    iChannel0RightOut = (output_current[i] << 8);
+    iChannel0RightOut = bitsr(output_current[i]) << 8;
 
     input_next[i] = rbits((iChannel0RightIn >> 8));
     i++;
     if(i == N) {
-        i = 0;
+    	*pSIC_IAR0 = 0;
+    	*pSIC_IAR1 = 0;
+    	*pSIC_IAR2 = 0;
+    	*pSIC_IAR3 = 0;
+
+    	i = 0;
 
         volatile fract* input_temp = input_next;
         volatile fract* output_temp = output_next;
@@ -59,5 +64,12 @@ void Process_Data(void) {
         output_current = output_temp;
 
         process_start = true;
+
+    	*pSIC_IAR0 = 0xff2fffff;
+    	*pSIC_IAR1 = 0xfff43fff;
+    	*pSIC_IAR2 = 0xffffffff;
+    	*pSIC_IAR3 = 0xffffffff;
+
+
     }
 }

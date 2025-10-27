@@ -56,7 +56,7 @@ volatile int iTxBuffer1[2];
 // SPORT0 DMA receive buffer
 volatile int iRxBuffer1[2];
 
-volatile bool process_start;
+volatile bool process_start = 0;
 
 //--------------------------------------------------------------------------//
 // Function:	main

@@ -1,14 +1,14 @@
 #include "process.h"
 
-#define N            2048    // block length
-#define Sa           256     //
-#define alpha        1
+#define N            2048   // buffer size
+#define Sa           128     //
+#define alpha        0.5f
 #define Ss           (alpha * Sa)
 #define L            (Sa * alpha / 2)
-#define block_num    (N / (Sa * 2))
+#define block_num    (N / Sa - 1)
 #define block_length (Sa * 2)
 
-void process() {
+void process(void) {
     fract out_tmp[block_num * Sa * 2] = {0};
     size_t out_tmp_index = 0;
 
@@ -39,11 +39,12 @@ void process() {
         // memcpy(out_tmp + out_tmp_index,
         //         blocks[i] + fade_length, block_length - fade_length);
 
+        out_tmp_index +=  block_length - fade_length;
+
         km = corr(blocks[i], blocks[i + 1]);
 
-        apply_fade(out_tmp + out_tmp_index, blocks[i + 1], fade_length);
+        apply_fade(&(out_tmp[out_tmp_index]), blocks[i + 1], fade_length);
 
-        out_tmp_index += block_length - fade_length;
     }
 
     for(int j = 0; j < fade_length; ++j) {
@@ -53,7 +54,7 @@ void process() {
     {
         int copy_count = block_length - fade_length;
         for(int c = 0; c < copy_count; ++c) {
-            out_tmp[out_tmp_index + c] = blocks[block_num][fade_length + c];
+            out_tmp[out_tmp_index + c] = blocks[block_num - 1][fade_length + c];
         }
     }
     // memcpy(out_tmp + out_tmp_index, blocks[block_num] + fade_length,
@@ -61,5 +62,5 @@ void process() {
     out_tmp_index += block_length - fade_length;
 
     // Interpolate
-    resample_spline(out_tmp, out_tmp_index, out_current, N);
+    resample_spline(out_tmp, out_tmp_index, output_current, N);
 }
