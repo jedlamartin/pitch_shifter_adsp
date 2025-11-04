@@ -3,7 +3,7 @@
 #include "frame.h"
 #include "functions.h"
 
-#define N 2048    // block length
+#define N 1024    // block length
 
 section("L1_data_b") fract coefs[N] = {
 #include "bp_fract.dat"
@@ -48,10 +48,10 @@ void Process_Data(void) {
     input_next[i] = rbits((iChannel0RightIn >> 8));
     i++;
     if(i == N) {
-    	*pSIC_IAR0 = 0;
+    	/**pSIC_IAR0 = 0;
     	*pSIC_IAR1 = 0;
     	*pSIC_IAR2 = 0;
-    	*pSIC_IAR3 = 0;
+    	*pSIC_IAR3 = 0;*/
 
     	i = 0;
 
@@ -64,12 +64,12 @@ void Process_Data(void) {
         output_current = output_temp;
 
         process_start = true;
-
+/*
     	*pSIC_IAR0 = 0xff2fffff;
     	*pSIC_IAR1 = 0xfff43fff;
     	*pSIC_IAR2 = 0xffffffff;
     	*pSIC_IAR3 = 0xffffffff;
-
+*/
 
     }
 }

@@ -5,26 +5,32 @@
 
 size_t corr(const fract* arr1, const fract* arr2) {
     size_t max_index = 0;
-    int32_t max_value = 0;
-    for(size_t k = 0; k < L; ++k) {
-        int32_t accu = 0;
-        for(size_t n = 0; n < L - k; ++n) {
-            accu += (int32_t) (arr1[n] * arr2[n + k]);
+    accum max_value = 0;
+
+    for (size_t k = 0; k < L; ++k) {
+        accum accu = 0;
+        for (size_t n = 0; n < L - k; ++n) {
+            size_t arr1_index = block_length - L + k + n;
+            size_t arr2_index = n;
+            if (arr1_index < block_length) {
+                accu += arr1[arr1_index] * arr2[arr2_index];
+            }
         }
-        if(accu > max_value) {
+        if (accu > max_value) {
             max_value = accu;
             max_index = k;
         }
     }
+
     return max_index;
 }
 
 void apply_fade(fract* arr1, fract* arr2, size_t fade_length) {
     if(fade_length == 0) return;
-    fract dx = (fract) (FRACT_MAX / fade_length);
+    fract dx = (FRACT_MAX / fade_length);
     fract mul = 0;
     for(size_t i = 0; i < fade_length; ++i) {
-            arr1[block_length - 1 - fade_length + i] *= mul;
+            arr1[fade_length - 1 - i] *= mul;
             arr2[i] *= mul;
             mul += dx;
     }
@@ -59,7 +65,7 @@ void resample_spline(const fract* input_buffer,
         if (i < 1) i = 1;
         if (i > (int)(N_in - 3)) i = N_in - 3;
 
-        fract x = (fract)(source_index - (float)i);
+        fract x = (source_index - (float)i);
         if (x < 0) x = 0;
         if (x > 1) x = 1;
 
@@ -76,3 +82,6 @@ void resample_spline(const fract* input_buffer,
 
     output_buffer[N_out - 1] = input_buffer[N_in - 1];
 }
+
+
+

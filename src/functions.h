@@ -5,13 +5,14 @@
 
 #include "frame.h"
 
-#define N            2048    // block length
-#define Sa           128     //
-#define alpha        0.5f
+#define N            1024    // block length
+#define Sa           64     //
+#define alpha        1.5f
 #define Ss           (alpha * Sa)
-#define L            (Sa * alpha / 2)
 #define block_num    (N / Sa - 1)
 #define block_length (Sa * 2)
+#define L            (block_length / 8)
+
 
 extern volatile bool process_start;
 
