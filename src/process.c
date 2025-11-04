@@ -1,7 +1,7 @@
 #include "process.h"
 
-#define N            1024   // buffer size
-#define Sa           64     //
+#define N            1024    // buffer size
+#define Sa           64      //
 #define alpha        1.5f
 #define Ss           (alpha * Sa)
 #define block_num    (N / Sa - 1)
@@ -20,7 +20,6 @@ void process(void) {
         }
     }
 
-
     // 0. block
 
     {
@@ -30,16 +29,15 @@ void process(void) {
     }
     size_t out_tmp_index = block_length;
 
-
-
     int km = 2 * Sa - Ss;
     int fade_length;
     for(int i = 1; i < block_num; ++i) {
-        km = corr(blocks[i-1], blocks[i]);
+        km = corr(blocks[i - 1], blocks[i]);
 
         fade_length = 2 * Sa - Ss - km;
 
-        apply_fade(&(out_tmp[out_tmp_index - fade_length]), blocks[i], fade_length);
+        apply_fade(
+            &(out_tmp[out_tmp_index - fade_length]), blocks[i], fade_length);
 
         for(int j = 0; j < fade_length; ++j) {
             out_tmp[out_tmp_index - fade_length + j] += blocks[i][j];
@@ -52,13 +50,10 @@ void process(void) {
             }
         }
 
-
-
         // memcpy(out_tmp + out_tmp_index,
         //         blocks[i] + fade_length, block_length - fade_length);
 
-        out_tmp_index +=  block_length - fade_length;
-
+        out_tmp_index += block_length - fade_length;
     }
 
     // Interpolate
