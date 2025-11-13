@@ -10,7 +10,7 @@ The pitch shift relies on combining **Time Stretching** and **Resampling** metho
 
 | Technique | Function | Purpose |
 | :--- | :--- | :--- |
-| **Time Stretch** | OLA (`corr`, `apply_fade`) | Achieved by overlapping and adding audio blocks. **Cross-Correlation** (`corr`) finds the optimal phase alignment point, and a **linear cross-fade** (`apply_fade`) blends the segments. | 
+| **Time Stretch** | SOLA (`corr`, `apply_fade`) | Achieved by overlapping and adding audio blocks. **Cross-Correlation** (`corr`) finds the optimal phase alignment point, and a **linear cross-fade** (`apply_fade`) blends the segments. | 
 | **Resampling** | Rate Conversion (`resample_spline`) | Interpolates or decimate the time-stretched signal to shift the pitch up or down. |
 
 ## Prerequisites
